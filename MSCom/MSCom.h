@@ -1,5 +1,5 @@
-#ifndef BOOMPRESSOR_H
-#define BOOMPRESSOR_H
+#ifndef MSCOM_MSCOM_H_
+#define MSCOM_MSCOM_H_
 
 #include "lib/nave96.h"
 
@@ -10,6 +10,8 @@
 #define NAVE96_B_SIZE BK_SZ*NAVE96_BK_IN_BUF
 #define NAVE96_F_EXTENSION ".nave96"
 #define NAVE96_F_EXTENSION_L 7 // counting dot too
+
+// TODO Singleton
 
 class MSCom {
     enum class alg {
@@ -46,4 +48,4 @@ public:
 
 };
 
-#endif //BOOMPRESSOR_H
+#endif //MSCOM_MSCOM_H_
