@@ -1,7 +1,7 @@
 #include <iostream>
 #include <bitset>
 
-#include "MSComp/MSComp.h"
+#include "MSCom/MSCom.h"
 
 void printBinary(char *arr, unsigned sz) {
     std::cout << "Number of bytes: " << sz << std::endl;
@@ -12,6 +12,6 @@ void printBinary(char *arr, unsigned sz) {
 }
 
 int main(int argc, char *argv[]) {
-    MSComp bmp(argc, argv);
+    MSCom bmp(argc, argv);
     return 0;
 }

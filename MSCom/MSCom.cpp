@@ -1,17 +1,17 @@
-#include "MSComp.h"
+#include "MSCom.h"
 
 #include <iostream>
 
-MSComp::MSComp(int argc, char **argv) {
+MSCom::MSCom(int argc, char **argv) {
     argc_ = argc;
     argv_ = argv;
     processArguments();
 }
 
 
-bool MSComp::compressFile(MSComp::alg a,
-                          const std::string &inpath,
-                          std::string outpath) {
+bool MSCom::compressFile(MSCom::alg a,
+                         const std::string &inpath,
+                         std::string outpath) {
     if (outpath.empty()) {
         outpath = inpath + NAVE96_F_EXTENSION;
     }
@@ -33,9 +33,9 @@ bool MSComp::compressFile(MSComp::alg a,
     }
 }
 
-bool MSComp::decompressFile(MSComp::alg a,
-                            const std::string &
-                            inpath, std::string outpath) {
+bool MSCom::decompressFile(MSCom::alg a,
+                           const std::string &
+                           inpath, std::string outpath) {
     if (outpath.empty()) {
         outpath = inpath.substr(0, inpath.length() - NAVE96_F_EXTENSION_L);
     }
@@ -57,7 +57,7 @@ bool MSComp::decompressFile(MSComp::alg a,
     }
 }
 
-bool MSComp::fCompressNave96() {
+bool MSCom::fCompressNave96() {
     char inbuff[NAVE96_B_SIZE];
     nave96 nave;
 
@@ -97,7 +97,7 @@ bool MSComp::fCompressNave96() {
     return true;
 }
 
-bool MSComp::fDecompressNave96() {
+bool MSCom::fDecompressNave96() {
     try {
         std::cout << "Running decompression!\n";
 
@@ -120,7 +120,7 @@ bool MSComp::fDecompressNave96() {
     return true;
 }
 
-void MSComp::processArguments() {
+void MSCom::processArguments() {
     if (argc_ == 1 || !strcmp(argv_[1], "-h") || !strcmp(argv_[1], "--help")) {
         printHelp();
         return;
@@ -136,7 +136,7 @@ void MSComp::processArguments() {
 }
 
 
-void MSComp::printHelp() {
+void MSCom::printHelp() {
     std::cout << "BOOMPRESSOR v0.2.0b\n";
     std::cout << "Usage: [filepath]\n";
     std::cout << "File will be either compressed or decompressed\n"

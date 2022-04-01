@@ -11,7 +11,7 @@
 #define NAVE96_F_EXTENSION ".nave96"
 #define NAVE96_F_EXTENSION_L 7 // counting dot too
 
-class MSComp {
+class MSCom {
     enum class alg {
         nave96
     };
@@ -35,13 +35,13 @@ class MSComp {
     void printHelp();
 
 public:
-    MSComp(int argc, char *argv[]);
+    MSCom(int argc, char *argv[]);
 
-    MSComp(const MSComp &) = delete;
+    MSCom(const MSCom &) = delete;
 
-    MSComp &operator=(const MSComp &) = delete;
+    MSCom &operator=(const MSCom &) = delete;
 
-    ~MSComp() = default;
+    ~MSCom() = default;
 
 
 };

@@ -1,4 +1,4 @@
-#include "../MSComp/lib/Encoder.h"
+#include "../MSCom/lib/Encoder.h"
 #include "gtest/gtest.h"
 
 class EncoderTests : public ::testing::Test {

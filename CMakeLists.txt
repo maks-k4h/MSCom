@@ -8,12 +8,12 @@ include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
 add_executable(Compressor
         main.cpp   #comment to run tests
-        MSComp/MSComp.cpp
-        MSComp/MSComp.h
-        MSComp/lib/nave96.cpp
-        MSComp/lib/nave96.h
-        MSComp/lib/Encoder.cpp
-        MSComp/lib/Encoder.h
+        MSCom/MSCom.cpp
+        MSCom/MSCom.h
+        MSCom/lib/nave96.cpp
+        MSCom/lib/nave96.h
+        MSCom/lib/Encoder.cpp
+        MSCom/lib/Encoder.h
         tests/EncoderTests.cpp
         tests/nave96Tests.cpp
         )

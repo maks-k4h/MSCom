@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "../MSComp/lib/nave96.h"
+#include "../MSCom/lib/nave96.h"
 
 class Nave96Tests : public ::testing::Test {
 protected:
