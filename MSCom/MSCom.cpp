@@ -2,149 +2,233 @@
 
 #include <iostream>
 
-MSCom::MSCom(int argc, char **argv) {
-    argc_ = argc;
-    argv_ = argv;
-    processArguments();
-}
+namespace msc {
 
-
-bool MSCom::compressFile(MSCom::alg a,
-                         const std::string &inpath,
-                         std::string outpath) {
-    if (outpath.empty()) {
-        outpath = inpath + NAVE96_F_EXTENSION;
-    }
-    input.open(inpath, std::ios_base::in);
-    if (!input.is_open()) {
-        std::cout << "File cannot be opened!\n";
-        return false;
-    }
-    output.open(outpath, std::ios_base::out);
-    if (!output.is_open()) {
-        std::cout << "Cannot create output file!\n";
-        return false;
+    MSCom &MSCom::getInstance() noexcept {
+        static MSCom instance;
+        return instance;
     }
 
-    switch (a) {
-        case alg::nave96: {
-            return fCompressNave96();
-        }
-    }
-}
+    bool MSCom::run() {
 
-bool MSCom::decompressFile(MSCom::alg a,
-                           const std::string &
-                           inpath, std::string outpath) {
-    if (outpath.empty()) {
-        outpath = inpath.substr(0, inpath.length() - NAVE96_F_EXTENSION_L);
-    }
-    input.open(inpath, std::ios_base::in);
-    if (!input.is_open()) {
-        std::cout << "File cannot be opened!\n";
-        return false;
-    }
-    output.open(outpath, std::ios_base::out);
-    if (!output.is_open()) {
-        std::cout << "Cannot create output file!\n";
-        return false;
-    }
-
-    switch (a) {
-        case alg::nave96: {
-            return fDecompressNave96();
-        }
-    }
-}
-
-bool MSCom::fCompressNave96() {
-    char inbuff[NAVE96_B_SIZE];
-    nave96 nave;
-
-    unsigned long bytesin = 0;
-    unsigned long bytesout = 0;
-
-    try {
-        std::cout << "Running compression!\n";
-        Encoder ec(NAVE96_B_SIZE);
-        while (!input.fail()) {
-            unsigned p = 0;
-            while (p < NAVE96_B_SIZE && input.get(inbuff[p])) {
-                ++p, ++bytesin;
+        switch (state) {
+            case State::INFO: {
+                showHelp();
+                return true;
             }
-            // now p is the length
-            nave.compress(inbuff, p, &ec);;
-            for (char c; ec.getc(c);) {
-                output << c;
-                bytesout++;
+            case State::COMPRESS: {
+                return compressFile();
             }
+            case State::DECOMPRESS: {
+                return decompressFile();
+            }
+            case State::DEFAULT: {
+                return true;
+            }
+        }
+    }
 
-            ec.reset(false);
-            std::cout << "Done: " << bytesin / 1024 << "kb\n";
+    MSCom::FileFormat MSCom::getFileFormat(const std::string &path) const {
+        for (auto ext: fileExtensions)
+            if (path.ends_with(std::get<0>(ext)))
+                return std::get<1>(ext);
+
+        return FileFormat::uncompressed;
+    }
+
+    std::string MSCom::getExtensionByFormat(MSCom::FileFormat format) const {
+        for (auto ext: fileExtensions) {
+            if (std::get<1>(ext) == format)
+                return std::get<0>(ext);
+        }
+        return {};
+    }
+
+    std::string MSCom::removeExtension(std::string path) const {
+        int eBegin{0};
+        for (eBegin = (int)path.size() - 1; eBegin >= 0; --eBegin) {
+            if (path[eBegin] == '.') break;
+        }
+        if (eBegin < 0)
+            return path;
+        path.resize(eBegin);
+        return path;
+    }
+
+    void MSCom::showHelp() const noexcept {
+        std::cout << "MSCom v0.3.0\n";
+        std::cout << "Usage: [filepath]\n";
+    }
+
+// MSComp::processArguments.
+// Set state and needed values:
+//  INFO:
+//      No additional variables required
+//  COMPRESS:
+//      Input file format : uncompressed
+//      Output file format
+//      Input file path
+//      Output file path
+//  DECOMPRESS:
+//      Input file format
+//      Output file format : uncompressed
+//      Input file path
+//      Output file path
+//  DEFAULT:
+//      No work to do
+
+    void MSCom::processArguments(int argc, char *argv[]) {
+        if (argc < 1 || !argv) {
+            state = State::DEFAULT;
+            return;
         }
 
-        std::cout << "Compression is finished!\n";
-        std::cout << "Compression info:\n"
-                     "\tBytes on input: " << bytesin << "\n"
-                                                        "\tBytes on output: " << bytesout << "\n"
-                                                                                             "\tRatio: "
-                  << 100.0 * bytesout / bytesin << "%\n";
-    }
-    catch (std::exception &e) {
-        std::cout << e.what() << std::endl;
-        return false;
-    }
-    return true;
-}
+        if (argc == 1 || !strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
+            state = State::INFO;
+            return;
+        }
 
-bool MSCom::fDecompressNave96() {
-    try {
-        std::cout << "Running decompression!\n";
+        inFilePath = argv[1];
+        inputFormat = getFileFormat(inFilePath);
+        if (inputFormat == FileFormat::uncompressed) {
+            // compression
+            state = State::COMPRESS;
 
+            // nave96 format only
+            outputFormat = FileFormat::nave96;
+
+            // getting output file path
+            outFilePath = inFilePath + getExtensionByFormat(outputFormat);
+
+        } else {
+            // decompression
+            state = State::DECOMPRESS;
+            outputFormat = FileFormat::uncompressed;
+
+            outFilePath = removeExtension(inFilePath);
+        }
+    }
+
+    bool MSCom::openFiles() {
+        inputFile.open(inFilePath, std::ios_base::in);
+        if (!inputFile.is_open()) {
+            std::cout << "File cannot be opened!\n";
+            return false;
+        }
+        outputFile.open(outFilePath, std::ios_base::out);
+        if (!outputFile.is_open()) {
+            std::cout << "Cannot create output file!\n";
+            return false;
+        }
+        return true;
+    }
+
+
+    bool MSCom::compressFile() {
+        if (!openFiles())
+            return false;
+
+        bool success {true};
+        measurements.setFlags(COM_MES_TIME | COM_MES_BYTES);
+        measurements.run();
+
+        switch (outputFormat) {
+            case FileFormat::nave96: {
+                success = fCompressNave96();
+                break;
+            }
+            case FileFormat::uncompressed: {
+                throw std::logic_error("MSCom::compressFile() : "
+                                       "uncompressed output format.");
+            }
+        }
+
+        measurements.stop();
+        measurements.show();
+
+        return success;
+    }
+
+    bool MSCom::decompressFile() {
+        if (!openFiles())
+            return false;
+
+        bool success {true};
+        measurements.setFlags(COM_MES_TIME);
+        measurements.run();
+
+        switch (inputFormat) {
+            case FileFormat::nave96: {
+                success = fDecompressNave96();
+                break;
+            }
+            case FileFormat::uncompressed: {
+                throw std::logic_error("MSCom::decompressFile() : "
+                                       "uncompressed input format.");
+            }
+        }
+
+        measurements.stop();
+        measurements.show();
+
+        return success;
+    }
+
+    bool MSCom::fCompressNave96() {
+        char inbuff[NAVE96_B_SIZE];
         nave96 nave;
-        Encoder ec;
-        for (char c; input.get(c); ec.putc(c));
 
-        char buff[BK_SZ];
-        while (ec.getBitsInQueue()) {
-            unsigned sz = nave.decompress(&ec, buff, 1);
-            for (int i = 0; i < sz; ++i) output << buff[i];
+        uint32_t bytesIn = {0};
+        uint32_t bytesOut {0};
+
+        try {
+            std::cout << "Running compression!\n";
+            Encoder ec(NAVE96_B_SIZE);
+            while (!inputFile.fail()) {
+                unsigned p = 0;
+                while (p < NAVE96_B_SIZE && inputFile.get(inbuff[p])) {
+                    ++p;
+                }
+                bytesIn += p;
+
+                nave.compress(inbuff, p, &ec);
+
+                for (char c; ec.getc(c); bytesOut++)
+                    outputFile << c;
+
+                ec.reset(false);
+            }
+            measurements.setBytesIn(bytesIn);
+            measurements.setBytesOut(bytesOut);
         }
-
-        std::cout << "Decompression is finished!\n";
+        catch (std::exception &e) {
+            std::cout << e.what() << std::endl;
+            return false;
+        }
+        return true;
     }
-    catch (std::exception &e) {
-        std::cout << e.what() << std::endl;
-        return false;
+
+    bool MSCom::fDecompressNave96() {
+        try {
+            std::cout << "Running decompression!\n";
+
+            nave96 nave;
+            Encoder ec;
+            for (char c; inputFile.get(c); ec.putc(c));
+
+            char buff[BK_SZ];
+            while (ec.getBitsInQueue()) {
+                unsigned sz = nave.decompress(&ec, buff, 1);
+                for (int i = 0; i < sz; ++i) outputFile << buff[i];
+            }
+
+            std::cout << "Decompression is finished!\n";
+        }
+        catch (std::exception &e) {
+            std::cout << e.what() << std::endl;
+            return false;
+        }
+        return true;
     }
-    return true;
-}
 
-void MSCom::processArguments() {
-    if (argc_ == 1 || !strcmp(argv_[1], "-h") || !strcmp(argv_[1], "--help")) {
-        printHelp();
-        return;
-    }
-    std::string path(argv_[1]);
-    if (path.ends_with(NAVE96_F_EXTENSION)) {
-        // decompression
-        decompressFile(alg::nave96, path);
-    } else {
-        // compression
-        compressFile(alg::nave96, path);
-    }
-}
-
-
-void MSCom::printHelp() {
-    std::cout << "BOOMPRESSOR v0.2.0b\n";
-    std::cout << "Usage: [filepath]\n";
-    std::cout << "File will be either compressed or decompressed\n"
-                 "depending on its extension.\n";
-}
-
-
-
-
-
-
+} // namespace msc

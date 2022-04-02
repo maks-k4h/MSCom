@@ -3,7 +3,6 @@
 //
 
 #include "nave96.h"
-#include <iostream>
 
 /*
  * TODO
@@ -39,11 +38,13 @@ nave96::CBlock::CBlock(char *data, unsigned int sz, Encoder *ec) {
     ec_ = ec;
 }
 
+/*
 nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
         (nave96::CBlock::Pattern that) {
     this->swap(that);
     return *this;
 }
+*/
 
 void nave96::CBlock::Pattern::swap(nave96::CBlock::Pattern &that) {
     std::swap(this->t_, that.t_);
@@ -60,6 +61,12 @@ nave96::CBlock::Pattern::Pattern(nave96::CBlock::Pattern &&that)
 
 int nave96::CBlock::Pattern::getEffect() {
     return effect_ = ((t_ - 1) * l_ * 8) - (PL_BITS + TU_BITS + t_ * M_BITS);
+}
+
+nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=(Pattern &&that)
+noexcept {
+    swap(that);
+    return *this;
 }
 
 // COMPRESSION -----------------------------------------------------------------

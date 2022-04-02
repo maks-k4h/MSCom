@@ -1,5 +1,5 @@
-#ifndef COMPRESSOR_NAVE96_H
-#define COMPRESSOR_NAVE96_H
+#ifndef MSCOM_LIB_NAVE96_H_
+#define MSCOM_LIB_NAVE96_H_
 
 /*
  * <header> ::= <patterns_num>{<pattern_info>}
@@ -67,7 +67,9 @@ class nave96 {
 
             Pattern(Pattern &&);
 
-            Pattern &operator=(Pattern that);
+            Pattern &operator=(Pattern &&) noexcept;
+
+            Pattern &operator=(const Pattern &) = delete;
 
             Pattern(const Pattern &) = delete;
 
@@ -146,7 +148,7 @@ class nave96 {
         // compressed data to encoder
         void compress();
 
-    }; // END OF CBLOCK DECLARATION
+    }; // class CBLOCK
 
     struct DBlock { // Decompression
 
@@ -177,7 +179,7 @@ class nave96 {
         std::vector<Marker> markers_; // buffer
         int mI = 0;                   // index
 
-    };// END OF DBLOCK DECLARATION
+    };// class DBLOCK
 
 public:
     Encoder *compress(char *in, unsigned sz);
@@ -187,7 +189,7 @@ public:
     // returns number of bytes decoded
     unsigned decompress(Encoder *in, char *out, int blockNumber = 0);
 
-}; // END OF NAVE96 DECLARATION
+}; // class NAVE96
 
 
-#endif //COMPRESSOR_NAVE96_H
+#endif // MSCOM_LIB_NAVE96_H_

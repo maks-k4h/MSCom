@@ -1,5 +1,5 @@
-#ifndef ENCODER_H
-#define ENCODER_H
+#ifndef MSCOM_LIB_ENCODER_H_
+#define MSCOM_LIB_ENCODER_H_
 
 // Encoder class dedicated to create sequences on bit level
 
@@ -60,4 +60,4 @@ public:
 };
 
 
-#endif //ENCODER_H
+#endif // MSCOM_LIB_ENCODER_H_
