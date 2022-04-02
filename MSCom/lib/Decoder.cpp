@@ -4,7 +4,10 @@
 namespace msc {
 
     Decoder::Decoder(const uint8_t *data_, size_t size)
-            : data{data_}, bitc{0}, dSizeBits{size * 8} {}
+            : data{data_} {
+        if (data)
+            dSizeBits = size * 8;
+    }
 
     uint64_t Decoder::bitsDone() const noexcept {
         return bitc;
@@ -34,7 +37,8 @@ namespace msc {
     void Decoder::setData(uint8_t *data_, size_t sz) noexcept {
         data = data_;
         bitc = 0;
-        dSizeBits = sz;
+        if (data)
+            dSizeBits = sz * 8;
     }
 
     bool Decoder::getBit() {

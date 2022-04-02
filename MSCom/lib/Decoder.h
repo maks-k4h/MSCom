@@ -30,21 +30,14 @@ namespace msc {
     class Decoder {
     public:
         Decoder() = default;
-
         Decoder(const Decoder &) = default;
-
         Decoder(const uint8_t *, size_t);
-
         Decoder &operator=(const Decoder &) = default;
-
         ~Decoder() = default;
 
         uint64_t bitsDone() const noexcept;
-
         uint64_t bitsInQueue() const noexcept;
-
         void roundBitCount() noexcept;
-
         void resetBitCount() noexcept;
 
         const uint8_t *getData() const noexcept;

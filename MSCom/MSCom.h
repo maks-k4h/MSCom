@@ -25,7 +25,6 @@ class MSCom {
     char **argv_ = nullptr; // | no destructor
 
     bool fCompressNave96();
-
     bool fDecompressNave96();
 
     bool compressFile(alg, const std::string &inpath, std::string outpath = "");
@@ -38,9 +37,7 @@ class MSCom {
 
 public:
     MSCom(int argc, char *argv[]);
-
     MSCom(const MSCom &) = delete;
-
     MSCom &operator=(const MSCom &) = delete;
 
     ~MSCom() = default;

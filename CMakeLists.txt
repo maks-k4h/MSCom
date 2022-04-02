@@ -7,7 +7,7 @@ add_subdirectory(tests/googletest)
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
 add_executable(Compressor
-        #main.cpp   #comment to run tests
+        main.cpp   #comment to run tests
         MSCom/MSCom.cpp
         MSCom/MSCom.h
         MSCom/lib/nave96.cpp
