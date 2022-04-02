@@ -10,6 +10,8 @@ add_executable(Compressor
         main.cpp   #comment to run tests
         MSCom/MSCom.cpp
         MSCom/MSCom.h
+        MSCom/ComMeasurements.cpp
+        MSCom/ComMeasurements.h
         MSCom/lib/nave96.cpp
         MSCom/lib/nave96.h
         MSCom/lib/Encoder.cpp

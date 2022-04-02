@@ -12,7 +12,7 @@ void printBinary(char *arr, unsigned sz) {
 }
 
 int main(int argc, char *argv[]) {
-    MSCom &compressor = MSCom::getInstance();
+    msc::MSCom &compressor = msc::MSCom::getInstance();
     compressor.processArguments(argc, argv);
     compressor.run();
     return 0;
