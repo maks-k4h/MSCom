@@ -1,12 +1,13 @@
 #include "gtest/gtest.h"
 #include "../MSCom/lib/nave96.h"
 
+
 class Nave96Tests : public ::testing::Test {
 protected:
-    nave96 *nave;
+    msc::nave96 *nave;
 
     void SetUp() override {
-        nave = new nave96;
+        nave = new msc::nave96;
     }
 
     void TearDown() override {
