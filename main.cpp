@@ -12,6 +12,8 @@ void printBinary(char *arr, unsigned sz) {
 }
 
 int main(int argc, char *argv[]) {
-    MSCom bmp(argc, argv);
+    MSCom &compressor = MSCom::getInstance();
+    compressor.processArguments(argc, argv);
+    compressor.run();
     return 0;
 }
