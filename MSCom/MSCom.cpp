@@ -183,7 +183,7 @@ namespace msc {
 
         try {
             std::cout << "Running compression!\n";
-            Encoder ec(NAVE96_B_SIZE);
+            EncoderOld ec(NAVE96_B_SIZE);
             while (!inputFile.fail()) {
                 unsigned p = 0;
                 while (p < NAVE96_B_SIZE && inputFile.get(inbuff[p])) {
@@ -219,7 +219,7 @@ namespace msc {
             Decoder inputDecoder(&inputData[0], inputData.size());
             char buff[BK_SZ];
             while (inputDecoder.bitsInQueue() > 0) {
-                Encoder outputEncoder;
+                EncoderOld outputEncoder;
                 nave.decompress(inputDecoder, outputEncoder, 1);
                 for (char c; outputEncoder.getc(c); outputFile.put(c));
             }

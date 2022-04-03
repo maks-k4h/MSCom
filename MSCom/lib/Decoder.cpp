@@ -1,30 +1,19 @@
 
 #include "Decoder.h"
 
-#include <iostream>
 namespace msc {
 
-    Decoder::Decoder(const uint8_t *data_, size_t size)
-            : data{data_} {
+    Decoder::Decoder(const uint8_t *data_, size_t sz)
+    : data{data_} {
         if (data)
-            dSizeBits = size * 8;
+            dSizeBits = sz * 8;
     }
 
-    uint64_t Decoder::bitsDone() const noexcept {
-        return bitc;
-    }
-
-    uint64_t Decoder::bitsInQueue() const noexcept {
-        return dSizeBits - bitc;
-    }
-
-    void Decoder::roundBitCount() noexcept {
-        while (bitc % 8 != 0)
-            ++bitc;
-    }
-
-    void Decoder::resetBitCount() noexcept {
+    void Decoder::setData(const uint8_t *data_, size_t sz) noexcept {
+        data = data_;
         bitc = 0;
+        if (data)
+            dSizeBits = sz * 8;
     }
 
     const uint8_t *Decoder::getData() const noexcept {
@@ -35,24 +24,17 @@ namespace msc {
         return static_cast<bool>(data);
     }
 
-    void Decoder::setData(uint8_t *data_, size_t sz) noexcept {
-        data = data_;
-        bitc = 0;
-        if (data)
-            dSizeBits = sz * 8;
-    }
-
+    // TODO : remove out_of_range throw (with time)
+    // out_of_range error on fail, must never emerge
     bool Decoder::getBit() {
         if (bitc >= dSizeBits)
-            throw std::out_of_range(
-                    "Decoder::getBit : "
-                    "no bits left."
-            );
+            throw std::out_of_range("Decoder::getBit : no bits left.");
 
         //            | byte |             | bit |
         bool r = data[bitc / 8] & (0x80 >> bitc % 8);
         ++bitc;
         return r;
     }
+
 
 } // namespace msc

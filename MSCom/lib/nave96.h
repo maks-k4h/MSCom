@@ -52,7 +52,7 @@
 #include <exception>
 #include <unordered_map>
 
-#include "Encoder.h"
+#include "EncoderOld.h"
 #include "Decoder.h"
 
 namespace msc {
@@ -100,7 +100,7 @@ namespace msc {
 
             }; // END OF PATTERN DECLARATION
 
-            CBlock(char *data, unsigned sz, Encoder *);
+            CBlock(char *data, unsigned sz, EncoderOld *);
 
             ~CBlock() = default;
 
@@ -109,7 +109,7 @@ namespace msc {
             unsigned data_sz_;  // up to 4096 bytes
 
             // encoder
-            Encoder *ec_ = nullptr;
+            EncoderOld *ec_ = nullptr;
 
             // Patterns
             std::array<Pattern, PB_SZ> pts_;
@@ -156,13 +156,13 @@ namespace msc {
                 int pattern_;
             };
 
-            DBlock(Decoder &in, Encoder &out);
+            DBlock(Decoder &in, EncoderOld &out);
 
             void decompress();
             void sortMarkers();
             uint64_t getDecompressedBitsNumber() const noexcept;
 
-            Encoder &ec;
+            EncoderOld &ec;
             Decoder &dc;
             uint64_t blockBeginBit;
 
@@ -174,11 +174,11 @@ namespace msc {
         };// struct DBLOCK
 
     public:
-        Encoder *compress(char *in, unsigned sz);
+        EncoderOld *compress(char *in, unsigned sz);
 
-        void compress(char *in, unsigned sz, Encoder *out);
+        void compress(char *in, unsigned sz, EncoderOld *out);
 
-        bool decompress(Decoder &in, Encoder &out, int blocks = 0);
+        bool decompress(Decoder &in, EncoderOld &out, int blocks = 0);
 
     }; // class NAVE96
 

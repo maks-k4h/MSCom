@@ -14,10 +14,15 @@ add_executable(Compressor
         MSCom/ComMeasurements.h
         MSCom/lib/nave96.cpp
         MSCom/lib/nave96.h
-        MSCom/lib/Encoder.cpp
-        MSCom/lib/Encoder.h
+        MSCom/lib/EncoderOld.cpp
+        MSCom/lib/EncoderOld.h
+
+        MSCom/lib/BitView.cpp
+        MSCom/lib/BitView.h
         MSCom/lib/Decoder.cpp
         MSCom/lib/Decoder.h
+        MSCom/lib/Encoder.cpp
+        MSCom/lib/Encoder.h
 
         tests/EncoderTests.cpp
         tests/DecoderTests.cpp
