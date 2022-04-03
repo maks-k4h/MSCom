@@ -4,6 +4,8 @@
 
 #include "nave96.h"
 
+#include <iostream>
+
 namespace msc {
 
     Encoder *nave96::compress(char *in, unsigned int sz) {
@@ -149,10 +151,10 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
     }
 
 
-/*
- * makeMarkers goes through all the patterns from the most effective
- * to the less effective using those patterns whenever it can
- * */
+    /*
+     * makeMarkers goes through all the patterns from the most effective
+     * to the less effective using those patterns whenever it can
+     * */
     void nave96::CBlock::makeMarkers() {
         int slow = 0;
 
@@ -255,37 +257,40 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
 
 // DECOMPRESSION ---------------------------------------------------------------
 
-    unsigned nave96::decompress(Encoder *in, char *out, int bn) {
-        if (!bn) bn = INT32_MAX;
-        unsigned dsize = 0;
+    bool nave96::decompress(Decoder &in, Encoder &out, int blocks) {
+        if (blocks < 1)
+            blocks = INT32_MAX;
 
-        for (int b = 0; b < bn; ++b) {
-            DBlock block(in, out + BK_SZ * b);
+        for (int blocksDone {0};
+                blocksDone < blocks && in.bitsInQueue() > 0;
+                ++blocksDone)
+        {
+            DBlock block(in, out);
             block.decompress();
-            if (!block.ddI) break;
-            dsize += block.ddI;
         }
 
-        return dsize;
+        return true;
     }
 
+    nave96::DBlock::DBlock(Decoder &in, Encoder &out)
+    : dc{in}, ec{out}, blockBeginBit{out.getBitsPut()} { }
 
     void nave96::DBlock::decompress() {
         // HEADER DECODING
 
         int pnum; // number of patterns
-        if (!ec_->getint(pnum, NP_BITS)) return;
+        if (!dc.get<NP_BITS>(pnum)) return;
 
         // Decrypting patterns
         for (int i = 0; i < pnum; ++i) {
             int plength;
-            ec_->getint(plength, PL_BITS);
+            dc.get<PL_BITS>(plength);
             plength += PL_MIN;
 
             // reading pattern
             patterns_.emplace_back("");
             for (int j = 0, ch; j < plength; ++j) {
-                if (!ec_->getint(ch, 8))
+                if (!dc.get<8>(ch))
                     throw std::length_error(
                             "Pattern information cannot be decoded!");
                 patterns_[i] += ch;
@@ -293,10 +298,10 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
 
 
             int mnum; // number of pattern's markers
-            ec_->getint(mnum, TU_BITS);
+            dc.get<TU_BITS>(mnum);
             mnum += TU_MIN;
             for (int j = 0, m; j < mnum; ++j) {
-                ec_->getint(m, M_BITS);
+                dc.get<M_BITS>(m);
                 markers_.push_back({m, i});
             }
         }
@@ -306,40 +311,36 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
         // BODY DECODING
         // using markers
         for (int m = 0; m < markers_.size(); ++m) {
-            while (ddI < markers_[m].pos_) {
-                if (!ec_->getc(ddata_[ddI])) {
+            uint8_t temp;
+            while (getDecompressedBitsNumber() / 8 < markers_[m].pos_) {
+                if (!dc.get<8>(temp)) {
                     throw std::length_error("Block body cannot be decoded!");
                 }
-                ++ddI;
+                ec.putint(temp, 8);
             }
             for (int pi = 0; pi < patterns_[markers_[m].pattern_].size(); ++pi) {
-                ddata_[ddI] = patterns_[markers_[m].pattern_][pi];
-                ++ddI;
+                ec.putc(patterns_[markers_[m].pattern_][pi]);
             }
         }
 
         // reading rest of the body
         char c;
-        while (ddI < BK_SZ && ec_->getc(c)) ddata_[ddI++] = c;
+        while (getDecompressedBitsNumber() / 8 < BK_SZ && dc.get<8>(c))
+            ec.putc(c);
 
-
-        // IMPORTANT, NOT roundBitCount!!! | spent half a day.....
-        ec_->roundOutBitCount();
+        dc.roundBitCount();
     }
 
     void nave96::DBlock::sortMarkers() {
-        bool changes = true;
-        while (changes) {
-            changes = false;
-            for (int i = 0; i < int(markers_.size()) - 1; ++i) {
-                if (markers_[i].pos_ > markers_[i + 1].pos_) {
-                    auto temp = markers_[i];
-                    markers_[i] = markers_[i + 1];
-                    markers_[i + 1] = temp;
-                    changes = true;
-                }
-            }
-        }
+        std::sort(markers_.begin(),
+                  markers_.end(),
+                  [](const Marker &v1, const Marker &v2) -> bool {
+            return v1.pos_ < v2.pos_;
+        });
+    }
+
+    uint64_t nave96::DBlock::getDecompressedBitsNumber() const noexcept {
+        return ec.getBitsPut() - blockBeginBit;
     }
 
 } // namespace msc

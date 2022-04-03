@@ -53,6 +53,7 @@
 #include <unordered_map>
 
 #include "Encoder.h"
+#include "Decoder.h"
 
 namespace msc {
 
@@ -146,7 +147,7 @@ namespace msc {
             // compressed data to encoder
             void compress();
 
-        }; // class CBLOCK
+        }; // struct CBLOCK
 
         struct DBlock { // Decompression
 
@@ -155,37 +156,29 @@ namespace msc {
                 int pattern_;
             };
 
-            DBlock() = default;
-
-            DBlock(Encoder *ec, char *out)
-                    : ec_{ec}, ddata_{out} {};
+            DBlock(Decoder &in, Encoder &out);
 
             void decompress();
-
             void sortMarkers();
+            uint64_t getDecompressedBitsNumber() const noexcept;
 
-            // decompressed data
-            char *ddata_;               // buffer | no destructor
-            int ddI = 0;                // index
-
-            // input (compressed) data
-            Encoder *ec_ = nullptr;     // | no destructor
+            Encoder &ec;
+            Decoder &dc;
+            uint64_t blockBeginBit;
 
             std::vector<std::string> patterns_;
-
 
             std::vector<Marker> markers_; // buffer
             int mI = 0;                   // index
 
-        };// class DBLOCK
+        };// struct DBLOCK
 
     public:
         Encoder *compress(char *in, unsigned sz);
 
-        void compress(char *in, unsigned sz, Encoder *ec);
+        void compress(char *in, unsigned sz, Encoder *out);
 
-        // returns number of bytes decoded
-        unsigned decompress(Encoder *in, char *out, int blockNumber = 0);
+        bool decompress(Decoder &in, Encoder &out, int blocks = 0);
 
     }; // class NAVE96
 

@@ -21,7 +21,6 @@ add_executable(Compressor
 
         tests/EncoderTests.cpp
         tests/DecoderTests.cpp
-        tests/nave96Tests.cpp
         )
 target_link_libraries(Compressor gtest gtest_main)
 

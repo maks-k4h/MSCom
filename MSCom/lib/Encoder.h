@@ -48,6 +48,8 @@ public:
     bool getbit(bool &);
 
     unsigned getBitsInQueue() const { return bitCount_ - bitOutCount_; }
+    unsigned getBitsPut() const { return bitCount_; }
+    unsigned getBitsRead() const { return bitOutCount_; }
     //unsigned getActualBufferSize()  const {return buff_.size();}
 
     // rounds bitCount so that the last byte in buffer is full

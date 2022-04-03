@@ -212,20 +212,22 @@ namespace msc {
         try {
             std::cout << "Running decompression!\n";
 
-            nave96 nave;
-            Encoder ec;
-            for (char c; inputFile.get(c); ec.putc(c));
+            std::vector<uint8_t> inputData;
+            for (char c; inputFile.get(c); inputData.emplace_back(c));
 
+            nave96 nave;
+            Decoder inputDecoder(&inputData[0], inputData.size());
             char buff[BK_SZ];
-            while (ec.getBitsInQueue()) {
-                unsigned sz = nave.decompress(&ec, buff, 1);
-                for (int i = 0; i < sz; ++i) outputFile << buff[i];
+            while (inputDecoder.bitsInQueue() > 0) {
+                Encoder outputEncoder;
+                nave.decompress(inputDecoder, outputEncoder, 1);
+                for (char c; outputEncoder.getc(c); outputFile.put(c));
             }
 
             std::cout << "Decompression is finished!\n";
         }
         catch (std::exception &e) {
-            std::cout << e.what() << std::endl;
+            std::cerr << e.what() << std::endl;
             return false;
         }
         return true;
