@@ -1,6 +1,7 @@
 
 #include "Decoder.h"
 
+#include <iostream>
 namespace msc {
 
     Decoder::Decoder(const uint8_t *data_, size_t size)

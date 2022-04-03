@@ -38,9 +38,9 @@ namespace msc {
         };
 
         const std::vector<std::tuple<std::string, FileFormat>> fileExtensions
-                {
-                        {".nave96", FileFormat::nave96},
-                };
+        {
+            {".nave96", FileFormat::nave96},
+        };
 
         State state{State::DEFAULT};
         FileFormat inputFormat{FileFormat::uncompressed};
