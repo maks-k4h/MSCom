@@ -8,13 +8,13 @@
 
 namespace msc {
 
-    Encoder *nave96::compress(char *in, unsigned int sz) {
-        auto ec = new Encoder;
+    EncoderOld *nave96::compress(char *in, unsigned int sz) {
+        auto ec = new EncoderOld;
         compress(in, sz, ec);
         return ec;
     }
 
-    void nave96::compress(char *in, unsigned int sz, Encoder *ec) {
+    void nave96::compress(char *in, unsigned int sz, EncoderOld *ec) {
         if (!in || !sz) return;
 
         for (int bn = 0; bn * BK_SZ < sz; ++bn) {
@@ -25,7 +25,7 @@ namespace msc {
         }
     }
 
-    nave96::CBlock::CBlock(char *data, unsigned int sz, Encoder *ec) {
+    nave96::CBlock::CBlock(char *data, unsigned int sz, EncoderOld *ec) {
         if (!data) throw std::logic_error("Block cannot read not-existing data!");
         if (!sz) throw std::range_error("Block cannot have size of 0!");
 
@@ -257,7 +257,7 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
 
 // DECOMPRESSION ---------------------------------------------------------------
 
-    bool nave96::decompress(Decoder &in, Encoder &out, int blocks) {
+    bool nave96::decompress(Decoder &in, EncoderOld &out, int blocks) {
         if (blocks < 1)
             blocks = INT32_MAX;
 
@@ -272,7 +272,7 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
         return true;
     }
 
-    nave96::DBlock::DBlock(Decoder &in, Encoder &out)
+    nave96::DBlock::DBlock(Decoder &in, EncoderOld &out)
     : dc{in}, ec{out}, blockBeginBit{out.getBitsPut()} { }
 
     void nave96::DBlock::decompress() {
