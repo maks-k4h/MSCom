@@ -8,24 +8,19 @@
 
 namespace msc {
 
-    EncoderOld *nave96::compress(char *in, unsigned int sz) {
-        auto ec = new EncoderOld;
-        compress(in, sz, ec);
-        return ec;
-    }
-
-    void nave96::compress(char *in, unsigned int sz, EncoderOld *ec) {
+    void nave96::compress(char *in, unsigned int sz, Encoder &out) {
         if (!in || !sz) return;
 
         for (int bn = 0; bn * BK_SZ < sz; ++bn) {
             unsigned bsz = std::min(unsigned(BK_SZ), sz - bn * BK_SZ);
             auto dp = in + bn * BK_SZ;
-            CBlock bl(dp, bsz, ec);
+            CBlock bl(dp, bsz, out);
             bl.compress();
         }
     }
 
-    nave96::CBlock::CBlock(char *data, unsigned int sz, EncoderOld *ec) {
+    nave96::CBlock::CBlock(char *data, unsigned int sz, Encoder &ec)
+    :ec_{ec} {
         if (!data) throw std::logic_error("Block cannot read not-existing data!");
         if (!sz) throw std::range_error("Block cannot have size of 0!");
 
@@ -56,7 +51,7 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
         this->swap(that);
     }
 
-    int nave96::CBlock::Pattern::getEffect() {
+    inline int nave96::CBlock::Pattern::getEfficiency() {
         return effect_ = ((t_ - 1) * l_ * 8) - (PL_BITS + TU_BITS + t_ * M_BITS);
     }
 
@@ -134,7 +129,7 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
     void nave96::CBlock::rmBadPatterns() {
         int slow = 0;
         for (int i = 0; i < ptsI_; ++i) {
-            if (pts_[i].getEffect() > 0) {
+            if (pts_[i].getEfficiency() > 0) {
                 pts_[slow] = std::move(pts_[i]);
                 ++slow;
             }
@@ -176,7 +171,7 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
 
             // evaluating the effectiveness
 
-            if (pts_[p].getEffect() > 0) {
+            if (pts_[p].getEfficiency() > 0) {
                 for (int m = 0; m < pts_[p].markers_.size(); ++m) {
                     for (int i = 0; i < pts_[p].l_; ++i) {
                         takenBits[pts_[p].markers_[m] + i] = true;
@@ -203,7 +198,7 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
     void nave96::CBlock::encode() {
         // HEADER PART
         // <patterns_num>
-        ec_->putint(int(ptsI_), NP_BITS);
+        ec_.put<NP_BITS>(ptsI_);
 
         for (int i = 0; i < ptsI_; ++i) {
 
@@ -216,11 +211,11 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
                 throw std::range_error("Pattern Length Range Error!");
             }
 
-            ec_->putint(pts_[i].l_ - PL_MIN, PL_BITS);
+            ec_.put<PL_BITS>(pts_[i].l_ - PL_MIN);
 
             // <pattern>
             for (int j = 0; j < pts_[i].l_; ++j) {
-                ec_->putc(data_[pts_[i].pos_ + j]);
+                ec_.put<8>(data_[pts_[i].pos_ + j]);
             }
 
             // <times_used>
@@ -231,7 +226,7 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
                                        + std::to_string(TU_MIN)
                                        + "," + std::to_string(TU_MAX) + "]!");
             }
-            ec_->putint(pts_[i].t_ - TU_MIN, TU_BITS);
+            ec_.put<TU_BITS>(pts_[i].t_ - TU_MIN);
 
             // <marker>
             if (pts_[i].t_ != pts_[i].markers_.size()) {
@@ -239,7 +234,7 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
                                        + std::to_string(i) + '!');
             }
             for (int j = 0; j < pts_[i].t_; ++j) {
-                ec_->putint(pts_[i].markers_[j], M_BITS);
+                ec_.put<M_BITS>(pts_[i].markers_[j]);
             }
 
         }
@@ -247,17 +242,17 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
         // BODY PART
         for (int i = 0; i < data_sz_; ++i) {
             if (!takenBits[i]) {
-                ec_->putc(data_[i]);
+                ec_.put<8>(data_[i]);
             }
         }
 
         // IMPORTANT !!!
-        ec_->roundBitCount();
+        ec_.roundBitCount();
     }
 
 // DECOMPRESSION ---------------------------------------------------------------
 
-    bool nave96::decompress(Decoder &in, EncoderOld &out, int blocks) {
+    bool nave96::decompress(Decoder &in, Encoder &out, int blocks) {
         if (blocks < 1)
             blocks = INT32_MAX;
 
@@ -272,8 +267,8 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
         return true;
     }
 
-    nave96::DBlock::DBlock(Decoder &in, EncoderOld &out)
-    : dc{in}, ec{out}, blockBeginBit{out.getBitsPut()} { }
+    nave96::DBlock::DBlock(Decoder &in, Encoder &out)
+    : dc{in}, ec{out}, blockBeginBit{out.bitsDone()} { }
 
     void nave96::DBlock::decompress() {
         // HEADER DECODING
@@ -316,17 +311,17 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
                 if (!dc.get<8>(temp)) {
                     throw std::length_error("Block body cannot be decoded!");
                 }
-                ec.putint(temp, 8);
+                ec.put<8>(temp);
             }
             for (int pi = 0; pi < patterns_[markers_[m].pattern_].size(); ++pi) {
-                ec.putc(patterns_[markers_[m].pattern_][pi]);
+                ec.put<8>(patterns_[markers_[m].pattern_][pi]);
             }
         }
 
         // reading rest of the body
         char c;
         while (getDecompressedBitsNumber() / 8 < BK_SZ && dc.get<8>(c))
-            ec.putc(c);
+            ec.put<8>(c);
 
         dc.roundBitCount();
     }
@@ -340,7 +335,7 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
     }
 
     uint64_t nave96::DBlock::getDecompressedBitsNumber() const noexcept {
-        return ec.getBitsPut() - blockBeginBit;
+        return ec.bitsDone() - blockBeginBit;
     }
 
 } // namespace msc

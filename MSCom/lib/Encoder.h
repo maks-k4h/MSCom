@@ -39,7 +39,6 @@ namespace msc {
         bool put(I val);
 
     private:
-        void putBit(bool);
 
         uint8_t *data {nullptr};
     };
@@ -57,7 +56,10 @@ namespace msc {
             return false;
         int bits = static_cast<int>(Bits);
         while (0 < bits--) {
-            putBit(val & (1 << bits));
+            //                          |  byte  |               |  bit  |
+            if (val & (1 << bits))  data[bitc / 8] |=  (0x80 >> (bitc % 8));
+            else                    data[bitc / 8] &= ~(0x80 >> (bitc % 8));
+            ++bitc;
         }
         return true;
     }

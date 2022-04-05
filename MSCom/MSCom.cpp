@@ -175,7 +175,8 @@ namespace msc {
     }
 
     bool MSCom::fCompressNave96() {
-        char inbuff[NAVE96_B_SIZE];
+        static const size_t buffSize = BK_SZ * 64;
+        char inbuff[buffSize];
         nave96 nave;
 
         uint32_t bytesIn = {0};
@@ -183,20 +184,22 @@ namespace msc {
 
         try {
             std::cout << "Running compression!\n";
-            EncoderOld ec(NAVE96_B_SIZE);
+            uint8_t outBuffer[buffSize];
+            Encoder ec(outBuffer, sizeof(outBuffer));
             while (!inputFile.fail()) {
                 unsigned p = 0;
-                while (p < NAVE96_B_SIZE && inputFile.get(inbuff[p])) {
+                while (p < buffSize && inputFile.get(inbuff[p])) {
                     ++p;
                 }
                 bytesIn += p;
 
-                nave.compress(inbuff, p, &ec);
+                nave.compress(inbuff, p, ec);
 
-                for (char c; ec.getc(c); bytesOut++)
-                    outputFile << c;
+                for (int i = 0; i < ec.bitsDone() / 8; ++i)
+                    outputFile << outBuffer[i];
 
-                ec.reset(false);
+                bytesOut += ec.bitsDone() / 8;
+                ec.resetBitCount();
             }
             measurements.setBytesIn(bytesIn);
             measurements.setBytesOut(bytesOut);
@@ -217,11 +220,13 @@ namespace msc {
 
             nave96 nave;
             Decoder inputDecoder(&inputData[0], inputData.size());
-            char buff[BK_SZ];
+            uint8_t buff[BK_SZ];
+            Encoder outputEncoder(buff, sizeof(buff));
             while (inputDecoder.bitsInQueue() > 0) {
-                EncoderOld outputEncoder;
+                outputEncoder.resetBitCount();
                 nave.decompress(inputDecoder, outputEncoder, 1);
-                for (char c; outputEncoder.getc(c); outputFile.put(c));
+                for (int i = 0; i < outputEncoder.bitsDone() / 8; ++i)
+                    outputFile.put(buff[i]);
             }
 
             std::cout << "Decompression is finished!\n";

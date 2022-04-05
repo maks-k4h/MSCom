@@ -24,17 +24,5 @@ namespace msc {
         return static_cast<bool>(data);
     }
 
-    // TODO : remove out_of_range throw (with time)
-    // out_of_range error on fail, must never emerge
-    void Encoder::putBit(bool b) {
-        if (bitc >= dSizeBits)
-            throw std::out_of_range("Decoder::getBit : no bits left.");
-
-        //          |  byte  |               |  bit  |
-        if (b)  data[bitc / 8] |=  (0x80 >> (bitc % 8));
-        else    data[bitc / 8] &= ~(0x80 >> (bitc % 8));
-        ++bitc;
-    }
-
 
 } // namespace msc

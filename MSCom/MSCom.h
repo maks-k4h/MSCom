@@ -6,9 +6,6 @@
 
 #include <fstream>
 
-#define NAVE96_BK_IN_BUF 64
-#define NAVE96_B_SIZE BK_SZ*NAVE96_BK_IN_BUF
-
 namespace msc {
 
     class MSCom {

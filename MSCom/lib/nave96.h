@@ -19,31 +19,31 @@
  * */
 
 // size of blocks
-#define BK_SZ 4096
+constexpr int BK_SZ     = 4096;
 
 // bits dedicated to Mark pattern insertion positions
-#define M_BITS 12
+constexpr int M_BITS    = 12;
 
 // TU — times used, how many times the pattern was used
-#define TU_BITS 8
-#define TU_MAX  257
-#define TU_MIN  2
+constexpr int TU_BITS   = 8;
+constexpr int TU_MAX    = 257;
+constexpr int TU_MIN    = 2;
 
 // PL — pattern length
 // bits dedicated to represent the length of the pattern
-#define PL_BITS 4
-#define PL_MAX 17
-#define PL_MIN 2
+constexpr int PL_BITS   = 4;
+constexpr int PL_MAX    = 17;
+constexpr int PL_MIN    = 2;
 
 // NP - number of patterns
-#define NP_BITS 8
-#define NP_MAX 255
+constexpr int NP_BITS   = 8;
+constexpr int NP_MAX    = 255;
 
 // Patterns buffer
-#define PB_SZ BK_SZ*(PL_MAX-PL_MIN+1)
+constexpr int PB_SZ     = BK_SZ*(PL_MAX-PL_MIN+1);
 
 // Hashing number
-#define HSN_N 12345
+constexpr int HSN_N     = 12345;
 
 
 #include <vector>
@@ -53,12 +53,17 @@
 #include <unordered_map>
 
 #include "EncoderOld.h"
+#include "Encoder.h"
 #include "Decoder.h"
 
 namespace msc {
 
     class nave96 {
+    public:
+        void compress(char *in, unsigned int sz, Encoder &out);
+        bool decompress(Decoder &in, Encoder &out, int blocks = 0);
 
+    private:
         struct CBlock { // Compression
 
             class Pattern {
@@ -76,7 +81,7 @@ namespace msc {
                 ~Pattern() = default;
 
                 void swap(Pattern &that);
-                int getEffect();
+                int getEfficiency();
 
                 void used() { t_ = (t_ < TU_MAX) ? t_ + 1 : t_; };
 
@@ -92,24 +97,21 @@ namespace msc {
                 // length of the pattern
                 int l_; // 2-17
 
-                // set in rmBadPatterns(), represented by maximum bits saved
                 int effect_ = 0;
-
-                //
                 std::vector<int> markers_;
 
             }; // END OF PATTERN DECLARATION
 
-            CBlock(char *data, unsigned sz, EncoderOld *);
+            CBlock(char *data, unsigned sz, Encoder &);
 
             ~CBlock() = default;
 
             // origin information
-            char *data_;        // | no destructor
+            char *data_;
             unsigned data_sz_;  // up to 4096 bytes
 
             // encoder
-            EncoderOld *ec_ = nullptr;
+            Encoder &ec_;
 
             // Patterns
             std::array<Pattern, PB_SZ> pts_;
@@ -121,8 +123,7 @@ namespace msc {
             void findAllPatterns();
 
             // returns index of the pattern or -1
-            // int hasPattern(int pos, int len);
-            int hasPattern(int pos, int len, int hash); // if case we have the hash
+            int hasPattern(int pos, int len, int hash);
             // adds pattern
             void addPattern(int pos, int len, int hash);
 
@@ -156,13 +157,13 @@ namespace msc {
                 int pattern_;
             };
 
-            DBlock(Decoder &in, EncoderOld &out);
+            DBlock(Decoder &in, Encoder &out);
 
             void decompress();
             void sortMarkers();
             uint64_t getDecompressedBitsNumber() const noexcept;
 
-            EncoderOld &ec;
+            Encoder &ec;
             Decoder &dc;
             uint64_t blockBeginBit;
 
@@ -172,13 +173,6 @@ namespace msc {
             int mI = 0;                   // index
 
         };// struct DBLOCK
-
-    public:
-        EncoderOld *compress(char *in, unsigned sz);
-
-        void compress(char *in, unsigned sz, EncoderOld *out);
-
-        bool decompress(Decoder &in, EncoderOld &out, int blocks = 0);
 
     }; // class NAVE96
 

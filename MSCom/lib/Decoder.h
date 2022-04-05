@@ -45,8 +45,6 @@ namespace msc {
         bool get(I &val);
 
     private:
-        bool getBit();
-
         const uint8_t *data {nullptr};
     };
 
@@ -64,8 +62,10 @@ namespace msc {
         val = 0;
         int bits = static_cast<int>(Bits);
         while (0 < bits--) {
-            if (!getBit()) continue;
-            val |= 1 << bits;
+            //      |  byte  |           |  bit  |
+            if (data[bitc / 8] & (0x80 >> bitc % 8))
+                val |= 1 << bits;
+            ++bitc;
         }
         return true;
     }
