@@ -30,13 +30,6 @@ namespace msc {
         ec_ = ec;
     }
 
-/*
-nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
-        (nave96::CBlock::Pattern that) {
-    this->swap(that);
-    return *this;
-}
-*/
 
     void nave96::CBlock::Pattern::swap(nave96::CBlock::Pattern &that) {
         std::swap(this->t_, that.t_);
@@ -77,14 +70,16 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
         int pattNextApp[PB_SZ];
         for (int i = 0; i < data_sz_ - 1; ++i) {
             int hash = data_[i];
-            for (int length = 2; length <= PL_MAX && i + length <= data_sz_; ++length) {
-                hash = hash * HSN_N + data_[i + length - 1] * length;
+            for (int length = 2; length <= PL_MAX &&
+                                    i + length <= data_sz_; ++length) {
+                hash = hash * HSN_N + data_[i + length - 1] + length * length;
                 int p = hasPattern(i, length, hash);
                 if (p == -1) {
                     addPattern(i, length, hash);
                     pattNextApp[ptsI_] = i + length;
                 } else {
-                    if (i < pattNextApp[p]) continue;
+                    if (i < pattNextApp[p])
+                        continue;
                     pattNextApp[p] = i + length;
                     pts_[p].used();
                 }
@@ -92,33 +87,23 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
         }
     }
 
-    int nave96::CBlock::hasPattern(int pos, int len, int hash) {
-        if (pos + len > data_sz_ || pos < 0 || len < 0) {
-            throw std::overflow_error("Search parameters are incorrect!");
-        }
+    inline int nave96::CBlock::hasPattern(int pos, int len, int hash) {
+        if (hashes_.find(hash) == hashes_.end())
+            return -1;
 
-        if (hashes_.find(hash) == hashes_.end()) return -1;
-
-        for (int i = 0; i < hashes_[hash].size(); ++i) {
-            auto pn = hashes_[hash][i];
-            if (len != pts_[pn].l_) continue;
-            for (int j = 0; j < len; ++j) {
-                if (data_[pos + j] != data_[pts_[pn].pos_ + j]) break;
-                if (j == len - 1) return pn;
+        for (int pn : hashes_[hash]) {
+            if (len != pts_[pn].l_){
+                continue;
+            }
+            if (memcmp(&data_[pos], &data_[pts_[pn].pos_], len) == 0) {
+                return pn;
             }
         }
-
         return -1;
     }
 
-    void nave96::CBlock::addPattern(int pos, int len, int hash) {
-        /*if(hasPattern(pos, len, hash)!=-1) {
-            throw std::logic_error("Pattern was already added!");
-        }*/
-        if (pos + len > data_sz_) {
-            throw std::overflow_error("Pattern of such length cannot be added!");
-        }
-        hashes_[hash].push_back(ptsI_);
+    inline void nave96::CBlock::addPattern(int pos, int len, int hash) {
+        hashes_[hash].emplace_back(ptsI_);
         pts_[ptsI_].pos_ = pos;
         pts_[ptsI_].l_ = len;
         pts_[ptsI_].t_ = 1;
@@ -138,8 +123,8 @@ nave96::CBlock::Pattern &nave96::CBlock::Pattern::operator=
     }
 
     void nave96::CBlock::sortPatterns() {
-        std::sort(pts_.begin(),
-                  pts_.begin() + ptsI_,
+        std::sort(pts_,
+                  pts_ + ptsI_,
                   [](const Pattern &v1, const Pattern &v2) -> bool {
                       return v1.effect_ > v2.effect_;
                   });

@@ -1,23 +1,6 @@
 #ifndef MSCOM_LIB_NAVE96_H_
 #define MSCOM_LIB_NAVE96_H_
 
-/*
- * <header> ::= <patterns_num>{<pattern_info>}
- * <pattern_info> ::= <pattern_size><pattern><times_used>{<marker>}
- *
- * ----------------------------------------------------------------------------
- *
- * nave96 compresses information by blocks of 4096 bytes
- *
- * ----------------------------------------------------------------------------
- *
- * You can see how it actually works by looking in definition of
- * nave96::compress and nave96::CBlock::compress functions in nave96.cpp.
- *
- * Decompression logic is implemented in nave96::decompress function.
- *
- * */
-
 // size of blocks
 constexpr int BK_SZ     = 4096;
 
@@ -43,7 +26,7 @@ constexpr int NP_MAX    = 255;
 constexpr int PB_SZ     = BK_SZ*(PL_MAX-PL_MIN+1);
 
 // Hashing number
-constexpr int HSN_N     = 12345;
+constexpr int HSN_N     = 123456841;
 
 
 #include <vector>
@@ -97,7 +80,7 @@ namespace msc {
                 // length of the pattern
                 int l_; // 2-17
 
-                int effect_ = 0;
+                int effect_ {0};
                 std::vector<int> markers_;
 
             }; // END OF PATTERN DECLARATION
@@ -114,8 +97,8 @@ namespace msc {
             Encoder &ec_;
 
             // Patterns
-            std::array<Pattern, PB_SZ> pts_;
-            int ptsI_ = 0;
+            Pattern pts_[PB_SZ];
+            int ptsI_ {0};
             std::unordered_map<int, std::vector<int>> hashes_;
 
             // PATTERNS INTERFACE
@@ -142,7 +125,7 @@ namespace msc {
             void encode();
 
             // 0 if byte haven't been replaced yet, 1 otherwise
-            bool takenBits[BK_SZ]{};
+            bool takenBits[BK_SZ] {};
 
             // Searches for patterns, uses them in effective way and writes
             // compressed data to encoder
